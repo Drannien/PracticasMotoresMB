@@ -21,6 +21,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.SolrInputDocument;
 
 public class MBPRACICA1 {
     static int nRanking = 1;
@@ -80,14 +81,11 @@ public class MBPRACICA1 {
     
     private static void lanzaConsulta(String consulta) throws SolrServerException, IOException   
     {
-       
+       consulta = consulta.replaceAll("[^a-zA-Z0-9<>/ ]","");
        HttpSolrClient solr = new HttpSolrClient.Builder("http://localhost:8983/solr/gate3").build();
        SolrQuery query = new SolrQuery();
-       consulta = consulta.replaceAll("[^a-zA-Z0-9 ]","");
+       System.out.println(consulta);
        
-       
-       
-
        List<String> personas = new ArrayList<>();
        List<String> orgs = new ArrayList<>();
        List<String> lugares = new ArrayList<>();
@@ -100,20 +98,30 @@ public class MBPRACICA1 {
        lugares = buscarContenido(etiquetaLugar,consulta);
        
        String palabras = reemplazarContenidoEtiqueta(consulta);
-       System.out.println(palabras);
+       
+       System.out.println("Consulta:" + nConsulta);
+       System.out.println(personas);
+       System.out.println(orgs);
+       System.out.println(lugares);
+       
        
        if (!personas.isEmpty()) {
            System.out.println("No esta vacia"); 
-           query.addFilterQuery("Personas: " + personas);
+           
+            query.addFilterQuery("Personas:" + personas.get(0));
+           
         }
 
         if (!orgs.isEmpty()) {
             System.out.println("Organiazaciones No esta vacia");
-            query.addFilterQuery("Organizaciones: " + orgs);
+            query.addFilterQuery("Organizaciones:" + orgs.get(0));
+            
         }
 
         if (!lugares.isEmpty()) {
-            query.addFilterQuery("Lugares: " + lugares);
+            
+           query.addFilterQuery("Lugares:" + lugares.get(0));
+            
         }
        
        
@@ -122,6 +130,8 @@ public class MBPRACICA1 {
        query.addFilterQuery("texto: " + palabras);
        QueryResponse rsp = solr.query(query);
        SolrDocumentList docs = rsp.getResults();
+       
+       
        
        converTrec(docs,nConsulta);
        //System.out.println(nConsulta);
@@ -144,6 +154,7 @@ public class MBPRACICA1 {
             Object score  = doc.getFieldValue("score");
             Object idp = doc.getFieldValue("idp");
             
+            System.out.println(score);
             String tituloSTR = titulo.toString();
             String autorSTR = autor.toString();
             String scoreSTR = score.toString();
@@ -183,5 +194,15 @@ public class MBPRACICA1 {
         }
         
         return contenidoEncontrado;
+    }
+    
+    private static void visualizaDoc(SolrInputDocument solrDoc)
+    {
+        int i = 1;
+        for (String fieldName : solrDoc.getFieldNames()) {
+            
+            System.out.println(fieldName + ": " + solrDoc.getFieldValues(fieldName));
+            
+        }
     }
 }
